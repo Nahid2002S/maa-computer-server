@@ -60,6 +60,9 @@ async function run() {
     const submitAssignmentCollections = client.db('maa-computer').collection('submit-assignment');
     const paymentCollections = client.db('maa-computer').collection('payment');
     const feedbackCollections = client.db('maa-computer').collection('feedback');
+    const allStudentCollections = client.db('maa-computer').collection('all-students');
+    const classCollections = client.db('maa-computer').collection('all-classes');
+    const problemCollections = client.db('maa-computer').collection('all-problems');
 
     app.post('/jwt', (req, res) =>{
       const user = req.body;
@@ -113,6 +116,20 @@ async function run() {
       const updateDoc = {
         $set: {
           totalmark: totalmark
+        },
+    }
+    const result = await userCollections.updateOne(filter, updateDoc);
+    res.send(result)
+  })
+
+    app.put('/users/role/:email', async(req, res) =>{
+      const email = req.params.email;
+       const courseName = req.body;
+
+       const filter = {email : email}
+      const updateDoc = {
+        $set: {
+          courseName: courseName
         },
     }
     const result = await userCollections.updateOne(filter, updateDoc);
@@ -344,7 +361,7 @@ async function run() {
     })
 
     app.get('/payment', async(req, res) =>{
-      const result = await paymentCollections.find().toArray();
+      const result = await paymentCollections.find().sort({date: -1}).toArray();
       res.send(result)
     })
 
@@ -391,6 +408,38 @@ async function run() {
     const result = await feedbackCollections.find(query).toArray();
     res.send(result);
    })
+
+   //all-student related api
+   app.get('/all-students', async(req, res)=>{
+    const result = await allStudentCollections.find().toArray();
+    res.send(result);
+   })
+
+   //class related api
+   app.post('/class-control', async(req, res) =>{
+    const classes = req.body;
+    const result = await classCollections.insertOne(classes);
+    res.send(result)
+  })
+
+  app.get('/class-control', async(req, res) =>{
+    const result = await classCollections.find().toArray();
+    res.send(result);
+  });
+
+  //report problem related api
+
+  app.post('/problem', async(req, res) =>{
+    const problem = req.body;
+
+    const result = await problemCollections.insertOne(problem);
+    res.send(result);
+  });
+
+  app.get('/problem', async(req, res) =>{
+    const result = await problemCollections.find().toArray();
+    res.send(result);
+  })
 
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
